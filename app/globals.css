@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom design tokens - charcoal, gold, amber palette */
+  --color-charcoal-50: #f6f6f7;
+  --color-charcoal-100: #e1e2e4;
+  --color-charcoal-200: #c3c5c9;
+  --color-charcoal-300: #9ea1a7;
+  --color-charcoal-400: #7a7e86;
+  --color-charcoal-500: #61656d;
+  --color-charcoal-600: #4d5057;
+  --color-charcoal-700: #414449;
+  --color-charcoal-800: #38393d;
+  --color-charcoal-900: #2d2e31;
+  --color-charcoal-950: #1a1b1d;
+
+  --color-gold-50: #fefce8;
+  --color-gold-100: #fef9c3;
+  --color-gold-200: #fef08a;
+  --color-gold-300: #fde047;
+  --color-gold-400: #facc15;
+  --color-gold-500: #eab308;
+  --color-gold-600: #ca8a04;
+  --color-gold-700: #a16207;
+  --color-gold-800: #854d0e;
+  --color-gold-900: #713f12;
+  --color-gold-950: #422006;
+
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+  --color-amber-950: #451a03;
+}
+
+:root {
+  --background: #1a1b1d;
+  --foreground: #fef3c7;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
