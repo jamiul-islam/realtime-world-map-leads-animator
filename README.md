@@ -2,6 +2,10 @@
 
 A minimalist, one-page web application featuring a luminous Locker and interactive world map that displays global progress toward an unlock goal.
 
+## APP UI
+
+![App UI](/assets/homepage.png)
+
 ## Tech Stack
 
 - **Next.js 15+** with App Router
