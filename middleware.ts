@@ -68,11 +68,22 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // Check if user has admin role
+    // Get the authenticated user
     const { data: userData } = await supabase.auth.getUser();
-    const userRole = userData.user?.user_metadata?.role || userData.user?.app_metadata?.role;
+    
+    if (!userData.user) {
+      const redirectUrl = new URL('/login', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
 
-    if (userRole !== 'admin') {
+    // Check admin role from users table
+    const { data: userRecord } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userData.user.id)
+      .single();
+
+    if (!userRecord || userRecord.role !== 'admin') {
       // Not an admin - redirect to login with error
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('error', 'Only admins can access the page');

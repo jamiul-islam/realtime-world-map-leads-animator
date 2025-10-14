@@ -46,17 +46,26 @@ export async function GET(request: NextRequest) {
         throw exchangeError;
       }
 
-      // Check if user has admin role
+      // Get the authenticated user
       const { data: userData, error: userError } = await supabase.auth.getUser();
       
-      if (userError) {
-        throw userError;
+      if (userError || !userData.user) {
+        throw userError || new Error('User not found');
       }
 
-      // Check user metadata for admin role
-      const userRole = userData.user?.user_metadata?.role || userData.user?.app_metadata?.role;
-      
-      if (userRole !== 'admin') {
+      // Check admin role from users table
+      const { data: userRecord, error: roleError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (roleError) {
+        console.error('Error fetching user role:', roleError);
+        throw new Error('Failed to verify user permissions');
+      }
+
+      if (!userRecord || userRecord.role !== 'admin') {
         // Not an admin - sign out and redirect with error
         await supabase.auth.signOut();
         return NextResponse.redirect(
