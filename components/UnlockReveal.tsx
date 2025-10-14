@@ -1,13 +1,30 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useGlobalStore } from '@/store/globalStore';
+
+// Generate smoke particles with random positions from center
+const generateSmokeParticles = (count: number) => {
+  return Array.from({ length: count }, (_, i) => {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5; // Distribute evenly in circle
+    const distance = Math.random() * 300 + 200; // Distance from center
+    return {
+      id: i,
+      x: Math.cos(angle) * distance, // X position based on angle
+      y: Math.sin(angle) * distance - Math.random() * 200, // Y position (slightly upward bias)
+      scale: Math.random() * 1.2 + 0.8, // Particle size variation
+      rotation: Math.random() * 360,
+      delay: Math.random() * 0.1,
+    };
+  });
+};
 
 export default function UnlockReveal() {
   const lockerState = useGlobalStore((state) => state.lockerState);
   const [showContent, setShowContent] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [smokeParticles] = useState(() => generateSmokeParticles(20));
   const contentRef = useRef<HTMLDivElement>(null);
   const hasShownOnce = useRef(false);
   
@@ -32,7 +49,7 @@ export default function UnlockReveal() {
     setTimeout(() => {
       setShowContent(false);
       setIsClosing(false);
-    }, 600);
+    }, 1000);
   };
   
   if (!lockerState?.is_unlocked || !showContent) {
@@ -40,42 +57,78 @@ export default function UnlockReveal() {
   }
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isClosing ? 0 : 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="unlock-title"
-      >
+    <motion.div
+      key="unlock-reveal-modal"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isClosing ? 0 : 1 }}
+      transition={{ duration: 0.4 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-xl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="unlock-title"
+    >
+      {/* Smoke Particles - only show when closing, ABOVE modal */}
+      {isClosing && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center z-20">
+          {smokeParticles.map((particle) => (
+            <motion.div
+              key={particle.id}
+              initial={{
+                x: 0,
+                y: 0,
+                scale: 0,
+                opacity: 0,
+              }}
+              animate={{
+                x: particle.x,
+                y: particle.y,
+                scale: [0, particle.scale * 1.5, particle.scale * 3],
+                opacity: [0, 1, 0],
+                rotate: particle.rotation,
+              }}
+              transition={{
+                duration: 1.2,
+                delay: 0.1 + particle.delay, // Start after modal begins shrinking
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="absolute w-56 h-56 rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(203, 213, 225, 0.6) 40%, rgba(148, 163, 184, 0.2) 100%)',
+                filter: 'blur(20px)',
+                boxShadow: '0 0 40px rgba(255, 255, 255, 0.3)',
+              }}
+            />
+          ))}
+        </div>
+      )}
+        
         <motion.div
           ref={contentRef}
           initial={{ scale: 0.8, opacity: 0, y: 50 }}
           animate={
             isClosing
               ? {
-                  scale: [1, 1.1, 0.3],
-                  opacity: [1, 0.8, 0],
-                  y: [0, -20, 100],
-                  rotate: [0, 5, -10],
+                  scale: [1, 0.98, 0.85, 0.6, 0.2],
+                  opacity: [1, 1, 0.8, 0.4, 0],
+                  y: [0, 0, 5, 15, 30],
+                  rotateZ: [0, -1, 1, -2, 3],
                   filter: [
-                    'blur(0px)',
-                    'blur(2px)',
-                    'blur(8px)',
+                    'blur(0px) brightness(1)',
+                    'blur(0px) brightness(1)',
+                    'blur(3px) brightness(0.9)',
+                    'blur(8px) brightness(0.6)',
+                    'blur(15px) brightness(0.3)',
                   ],
                 }
-              : { scale: 1, opacity: 1, y: 0, rotate: 0, filter: 'blur(0px)' }
+              : { scale: 1, opacity: 1, y: 0, rotateZ: 0, filter: 'blur(0px) brightness(1)' }
           }
-          exit={{ scale: 0.3, opacity: 0, y: 100 }}
+          exit={{ scale: 0.2, opacity: 0, y: 30 }}
           transition={
             isClosing
               ? {
-                  duration: 0.6,
-                  ease: [0.32, 0, 0.67, 0],
-                  times: [0, 0.4, 1],
+                  duration: 0.7,
+                  ease: [0.4, 0, 0.6, 1],
+                  times: [0, 0.15, 0.4, 0.7, 1],
                 }
               : {
                   type: 'spring',
@@ -84,7 +137,7 @@ export default function UnlockReveal() {
                   duration: 0.6,
                 }
           }
-          className="max-w-2xl mx-4 p-8 sm:p-12 bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-md rounded-3xl border-2 border-amber-500/40 shadow-2xl shadow-amber-500/30"
+          className="max-w-2xl mx-4 p-8 sm:p-12 bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-md rounded-3xl border-2 border-amber-500/40 shadow-2xl shadow-amber-500/30 relative z-10"
           tabIndex={-1}
         >
           <div className="text-center">
@@ -214,6 +267,5 @@ export default function UnlockReveal() {
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
   );
 }
