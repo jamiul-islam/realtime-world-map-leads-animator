@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useGlobalStore } from '@/store/globalStore';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
+import Legend from '@/components/Legend';
 import UnlockReveal from '@/components/UnlockReveal';
 
 export default function Home() {
@@ -33,6 +34,9 @@ export default function Home() {
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Hero Section with Map */}
         <HeroSection />
+        
+        {/* Legend */}
+        <Legend />
       </main>
       
       {/* Conditional Unlock Reveal */}
