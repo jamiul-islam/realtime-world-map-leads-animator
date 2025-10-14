@@ -47,10 +47,13 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      console.log('Sending magic link with redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: redirectUrl,
         },
       });
 
