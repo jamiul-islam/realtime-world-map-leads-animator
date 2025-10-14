@@ -7,20 +7,16 @@ import { useGlobalStore } from '@/store/globalStore';
 export default function UnlockReveal() {
   const lockerState = useGlobalStore((state) => state.lockerState);
   const [showContent, setShowContent] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const previousUnlockState = useRef(false);
+  const hasShownOnce = useRef(false);
   
-  // Detect when unlock happens and trigger animation sequence
+  // Show modal immediately when unlocked (including on page load)
   useEffect(() => {
-    if (lockerState?.is_unlocked && !previousUnlockState.current) {
-      // Unlock just happened - wait for unlock animation to complete
-      const timer = setTimeout(() => {
-        setShowContent(true);
-      }, 2000); // Match unlock sequence duration from design
-      
-      return () => clearTimeout(timer);
+    if (lockerState?.is_unlocked && !hasShownOnce.current) {
+      setShowContent(true);
+      hasShownOnce.current = true;
     }
-    previousUnlockState.current = lockerState?.is_unlocked ?? false;
   }, [lockerState?.is_unlocked]);
   
   // Focus management - move focus to revealed content for accessibility
@@ -30,6 +26,15 @@ export default function UnlockReveal() {
     }
   }, [showContent]);
   
+  const handleClose = () => {
+    setIsClosing(true);
+    // Wait for animation to complete before hiding
+    setTimeout(() => {
+      setShowContent(false);
+      setIsClosing(false);
+    }, 600);
+  };
+  
   if (!lockerState?.is_unlocked || !showContent) {
     return null;
   }
@@ -38,9 +43,9 @@ export default function UnlockReveal() {
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={{ opacity: isClosing ? 0 : 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.3 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-xl"
         role="dialog"
         aria-modal="true"
@@ -49,14 +54,36 @@ export default function UnlockReveal() {
         <motion.div
           ref={contentRef}
           initial={{ scale: 0.8, opacity: 0, y: 50 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.8, opacity: 0, y: 50 }}
-          transition={{
-            type: "spring",
-            stiffness: 200,
-            damping: 20,
-            duration: 0.6
-          }}
+          animate={
+            isClosing
+              ? {
+                  scale: [1, 1.1, 0.3],
+                  opacity: [1, 0.8, 0],
+                  y: [0, -20, 100],
+                  rotate: [0, 5, -10],
+                  filter: [
+                    'blur(0px)',
+                    'blur(2px)',
+                    'blur(8px)',
+                  ],
+                }
+              : { scale: 1, opacity: 1, y: 0, rotate: 0, filter: 'blur(0px)' }
+          }
+          exit={{ scale: 0.3, opacity: 0, y: 100 }}
+          transition={
+            isClosing
+              ? {
+                  duration: 0.6,
+                  ease: [0.32, 0, 0.67, 0],
+                  times: [0, 0.4, 1],
+                }
+              : {
+                  type: 'spring',
+                  stiffness: 200,
+                  damping: 20,
+                  duration: 0.6,
+                }
+          }
           className="max-w-2xl mx-4 p-8 sm:p-12 bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-md rounded-3xl border-2 border-amber-500/40 shadow-2xl shadow-amber-500/30"
           tabIndex={-1}
         >
@@ -178,8 +205,9 @@ export default function UnlockReveal() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
-              onClick={() => setShowContent(false)}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors underline focus:outline-none focus:ring-2 focus:ring-amber-500/50 rounded px-2 py-1"
+              onClick={handleClose}
+              disabled={isClosing}
+              className="text-sm text-slate-400 hover:text-slate-200 transition-colors underline focus:outline-none focus:ring-2 focus:ring-amber-500/50 rounded px-2 py-1 disabled:opacity-50"
             >
               Close
             </motion.button>
