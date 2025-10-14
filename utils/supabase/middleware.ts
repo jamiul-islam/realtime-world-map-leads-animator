@@ -39,7 +39,7 @@ export async function updateSession(request: NextRequest) {
     email: user?.email,
   });
 
-  // Protect /modify route
+  // Protect /modify route - but allow /auth/callback to pass through
   if (
     !user &&
     request.nextUrl.pathname.startsWith('/modify')
