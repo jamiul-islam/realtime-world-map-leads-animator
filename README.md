@@ -4,9 +4,9 @@ A minimalist, one-page web application featuring a luminous Locker and interacti
 
 ## Tech Stack
 
-- **Next.js 14+** with App Router
+- **Next.js 15+** with App Router
 - **TypeScript** for type safety
-- **Tailwind CSS** with custom design tokens (charcoal, gold, amber palette)
+- **Tailwind CSS 4** with modern design tokens (navy, cyan, purple palette)
 - **Zustand** for state management
 - **Framer Motion** for animations
 - **react-svg-worldmap** for world map visualization
@@ -63,7 +63,8 @@ npm run dev
 
 ## Design Tokens
 
-Custom color palette configured in `tailwind.config.ts`:
-- **Charcoal**: Background and neutral tones
-- **Gold**: Highlights and accents
-- **Amber**: Glow effects and warm tones
+Modern award-winning color palette configured in `app/globals.css`:
+- **Navy/Midnight Blue**: Deep, sophisticated backgrounds
+- **Cyan/Teal**: Vibrant primary accents and glows
+- **Electric Purple**: Dynamic highlights and gradients
+- **Soft White/Cream**: Clean, readable text
