@@ -8,10 +8,7 @@ export async function GET(request: NextRequest) {
   const error = requestUrl.searchParams.get('error');
   const errorDescription = requestUrl.searchParams.get('error_description');
 
-  console.log('Server callback: Received request with code:', !!code);
-
   if (error) {
-    console.error('Auth callback error:', error, errorDescription);
     return NextResponse.redirect(
       `${requestUrl.origin}/login?error=${encodeURIComponent(errorDescription || error)}`
     );
@@ -19,8 +16,6 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const cookieStore = await cookies();
-    const allCookies = cookieStore.getAll();
-    console.log('Server callback: Available cookies:', allCookies.map(c => c.name));
     
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,27 +33,31 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-
-    console.log('Server callback: Exchanging code for session...');
     
     // Exchange the code for a session
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {
-      console.error('Server callback: Code exchange error:', exchangeError.message);
       return NextResponse.redirect(
         `${requestUrl.origin}/login?error=${encodeURIComponent(exchangeError.message)}`
       );
     }
 
     if (data.session) {
-      console.log('Server callback: Session established:', data.session.user.email);
+      // Check if user has admin role
+      const userRole = data.session.user.app_metadata?.role;
+      
+      if (userRole !== 'admin') {
+        return NextResponse.redirect(
+          `${requestUrl.origin}/login?error=${encodeURIComponent('Access denied. Admin privileges required.')}`
+        );
+      }
+      
       // Redirect to modify page
       return NextResponse.redirect(`${requestUrl.origin}/modify`);
     }
   }
 
   // No code or session
-  console.error('Server callback: No code provided');
   return NextResponse.redirect(`${requestUrl.origin}/login?error=No+authentication+code`);
 }

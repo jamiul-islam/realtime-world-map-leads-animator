@@ -33,23 +33,23 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  console.log('Middleware: User check:', {
-    hasUser: !!user,
-    userId: user?.id,
-    email: user?.email,
-  });
-
-  // Protect /modify route - but allow /auth/callback to pass through
-  if (
-    !user &&
-    request.nextUrl.pathname.startsWith('/modify')
-  ) {
-    console.log('Middleware: No user, redirecting to /login');
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+  // Protect /modify route - require authentication and admin role
+  if (request.nextUrl.pathname.startsWith('/modify')) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+    
+    // Check if user has admin role
+    const userRole = user.app_metadata?.role;
+    if (userRole !== 'admin') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('error', 'Access denied. Admin privileges required.');
+      return NextResponse.redirect(url);
+    }
   }
 
-  console.log('Middleware: Allowing request to:', request.nextUrl.pathname);
   return supabaseResponse;
 }
