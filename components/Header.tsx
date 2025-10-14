@@ -1,14 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGlobalStore } from '@/store/globalStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Header() {
   const lockerState = useGlobalStore((state) => state.lockerState);
   const [showLockerModal, setShowLockerModal] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const previousPercentage = useRef(0);
   
   const energyPercentage = lockerState?.energy_percentage ?? 0;
+  const isUnlocked = lockerState?.is_unlocked ?? false;
+  
+  // Detect unlock trigger (when percentage reaches 100%)
+  useEffect(() => {
+    if (energyPercentage === 100 && previousPercentage.current < 100 && !isUnlocking) {
+      // Trigger unlock animation sequence
+      setIsUnlocking(true);
+      
+      // Reset after animation completes (2000ms as per design)
+      const timer = setTimeout(() => {
+        setIsUnlocking(false);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+    previousPercentage.current = energyPercentage;
+  }, [energyPercentage, isUnlocking]);
   
   return (
     <>
@@ -30,13 +49,24 @@ export default function Header() {
                 </div>
               </div>
               
-              {/* Locker Button */}
-              <button
+              {/* Locker Button with Unlock Animation */}
+              <motion.button
                 onClick={() => setShowLockerModal(true)}
                 className="relative group p-2 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 transition-all duration-300 border border-cyan-400/30 hover:border-cyan-400/50"
                 aria-label="View Locker"
+                animate={isUnlocking ? {
+                  scale: [1, 1.3, 1.2, 1.4, 1],
+                  rotate: [0, -10, 10, -5, 0],
+                } : {
+                  scale: 1,
+                  rotate: 0
+                }}
+                transition={isUnlocking ? {
+                  duration: 2,
+                  ease: "easeInOut"
+                } : {}}
               >
-                <svg
+                <motion.svg
                   width="28"
                   height="28"
                   viewBox="0 0 24 24"
@@ -44,11 +74,21 @@ export default function Header() {
                   xmlns="http://www.w3.org/2000/svg"
                   className="transition-all duration-300 group-hover:scale-110"
                   style={{
-                    filter: energyPercentage > 50 
+                    filter: isUnlocked || isUnlocking
+                      ? 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.9))'
+                      : energyPercentage > 50 
                       ? `drop-shadow(0 0 ${Math.min(energyPercentage / 10, 8)}px rgba(34, 211, 238, ${Math.min(energyPercentage / 100, 0.9)}))` 
                       : 'drop-shadow(0 0 4px rgba(34, 211, 238, 0.4))',
                   }}
+                  animate={isUnlocking ? {
+                    opacity: [1, 0.5, 1, 0.5, 1]
+                  } : {}}
+                  transition={isUnlocking ? {
+                    duration: 2,
+                    ease: "easeInOut"
+                  } : {}}
                 >
+                  {/* Lock body */}
                   <rect
                     x="6"
                     y="10"
@@ -58,24 +98,40 @@ export default function Header() {
                     stroke="currentColor"
                     strokeWidth="2"
                     fill="none"
-                    className="text-cyan-400"
+                    className={isUnlocked || isUnlocking ? "text-amber-400" : "text-cyan-400"}
                   />
-                  <path
-                    d="M8 10V7C8 5.34315 9.34315 4 11 4H13C14.6569 4 16 5.34315 16 7V10"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    className="text-cyan-400"
-                  />
+                  
+                  {/* Shackle - open when unlocked */}
+                  {isUnlocked ? (
+                    <motion.path
+                      initial={{ d: "M8 10V7C8 5.34315 9.34315 4 11 4H13C14.6569 4 16 5.34315 16 7V10" }}
+                      animate={{ d: "M8 10V7C8 5.34315 9.34315 4 11 4H13C14.6569 4 16 5.34315 16 7V8" }}
+                      transition={{ duration: 0.5 }}
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      className="text-amber-400"
+                    />
+                  ) : (
+                    <path
+                      d="M8 10V7C8 5.34315 9.34315 4 11 4H13C14.6569 4 16 5.34315 16 7V10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      className={isUnlocking ? "text-amber-400" : "text-cyan-400"}
+                    />
+                  )}
+                  
+                  {/* Keyhole */}
                   <circle
                     cx="12"
                     cy="14"
                     r="1.5"
                     fill="currentColor"
-                    className="text-cyan-400"
+                    className={isUnlocked || isUnlocking ? "text-amber-400" : "text-cyan-400"}
                   />
-                </svg>
-              </button>
+                </motion.svg>
+              </motion.button>
             </div>
           </div>
         </div>
@@ -114,17 +170,44 @@ export default function Header() {
               }}
               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl mx-4"
             >
-              <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-2xl border-2 border-cyan-500/40 rounded-3xl p-8 shadow-2xl shadow-cyan-500/30">
+              <div className={`bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-2xl border-2 rounded-3xl p-8 shadow-2xl ${
+                isUnlocked 
+                  ? 'border-amber-500/40 shadow-amber-500/30' 
+                  : 'border-cyan-500/40 shadow-cyan-500/30'
+              }`}>
                 <div className="text-center">
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-300 to-purple-400 bg-clip-text text-transparent mb-4">
-                    Central Locker
+                  <h2 className={`text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent mb-4 ${
+                    isUnlocked 
+                      ? 'from-amber-300 to-yellow-400' 
+                      : 'from-cyan-300 to-purple-400'
+                  }`}>
+                    {isUnlocked ? 'Unlocked!' : 'Central Locker'}
                   </h2>
                   <p className="text-slate-300 mb-6">
-                    Locker visualization will go here
+                    {isUnlocked 
+                      ? 'The global goal has been achieved!' 
+                      : 'Track global progress toward unlock'}
                   </p>
-                  <div className="text-6xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                  <div className={`text-6xl font-bold bg-gradient-to-r bg-clip-text text-transparent ${
+                    isUnlocked 
+                      ? 'from-amber-400 to-yellow-400' 
+                      : 'from-cyan-400 to-purple-400'
+                  }`}>
                     {energyPercentage}%
                   </div>
+                  
+                  {isUnlocked && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="mt-6"
+                    >
+                      <p className="text-amber-300 text-lg">
+                        ✨ Goal Complete ✨
+                      </p>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             </motion.div>
