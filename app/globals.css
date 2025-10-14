@@ -99,3 +99,29 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* World Map Styling */
+.worldmap-wrapper figure {
+  background: transparent !important;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.worldmap-wrapper svg {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 500px;
+  max-width: 100%;
+}
+
+/* Ensure map container has no white background */
+.worldmap-wrapper {
+  background: transparent;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

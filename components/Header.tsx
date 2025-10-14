@@ -1,92 +1,54 @@
 'use client';
 
+import { useState } from 'react';
 import { useGlobalStore } from '@/store/globalStore';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Header() {
   const lockerState = useGlobalStore((state) => state.lockerState);
+  const [showLockerModal, setShowLockerModal] = useState(false);
   
   const energyPercentage = lockerState?.energy_percentage ?? 0;
   
-  // Calculate progress ring properties
-  const radius = 16;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (energyPercentage / 100) * circumference;
-  
   return (
-    <header className="w-full bg-navy-900/60 backdrop-blur-md border-b border-cyan-500/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between py-4 gap-4">
-          {/* Title */}
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl sm:text-2xl font-semibold bg-gradient-to-r from-cyan-300 via-purple-300 to-cyan-400 bg-clip-text text-transparent">
+    <>
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-4xl px-4">
+        {/* Capsule Navigation Bar */}
+        <div className="bg-slate-900/80 backdrop-blur-xl border border-cyan-500/30 rounded-full px-6 py-3 shadow-2xl shadow-cyan-500/20">
+          <div className="flex items-center justify-between gap-6">
+            {/* Title */}
+            <h1 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-cyan-300 via-purple-300 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap">
               Global Unlock
             </h1>
-          </div>
-          
-          {/* Global Percentage Display with Mini Locker Icon */}
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className="text-sm text-slate-300 font-medium">
-                Global Progress
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                {energyPercentage}%
-              </div>
-            </div>
             
-            {/* Mini Locker Icon with Progress Ring */}
-            <div className="relative">
-              {/* Progress Ring SVG */}
-              <svg
-                className="transform -rotate-90"
-                width="48"
-                height="48"
-                viewBox="0 0 48 48"
-              >
-                {/* Background circle */}
-                <circle
-                  cx="24"
-                  cy="24"
-                  r={radius}
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  fill="none"
-                  className="text-slate-700"
-                />
-                {/* Progress circle */}
-                <circle
-                  cx="24"
-                  cy="24"
-                  r={radius}
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  fill="none"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  className="text-cyan-400 transition-all duration-500 ease-out"
-                  style={{
-                    filter: energyPercentage > 0 ? 'drop-shadow(0 0 6px rgba(34, 211, 238, 0.8))' : 'none',
-                  }}
-                />
-              </svg>
+            {/* Progress Display */}
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-xs text-slate-400 font-medium">Progress</div>
+                <div className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                  {energyPercentage}%
+                </div>
+              </div>
               
-              {/* Mini Locker Icon */}
-              <div className="absolute inset-0 flex items-center justify-center">
+              {/* Locker Button */}
+              <button
+                onClick={() => setShowLockerModal(true)}
+                className="relative group p-2 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 transition-all duration-300 border border-cyan-400/30 hover:border-cyan-400/50"
+                aria-label="View Locker"
+              >
                 <svg
-                  width="24"
-                  height="24"
+                  width="28"
+                  height="28"
                   viewBox="0 0 24 24"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
-                  className="transition-all duration-300"
+                  className="transition-all duration-300 group-hover:scale-110"
                   style={{
                     filter: energyPercentage > 50 
                       ? `drop-shadow(0 0 ${Math.min(energyPercentage / 10, 8)}px rgba(34, 211, 238, ${Math.min(energyPercentage / 100, 0.9)}))` 
-                      : 'none',
+                      : 'drop-shadow(0 0 4px rgba(34, 211, 238, 0.4))',
                   }}
                 >
-                  {/* Locker body */}
                   <rect
                     x="6"
                     y="10"
@@ -96,54 +58,79 @@ export default function Header() {
                     stroke="currentColor"
                     strokeWidth="2"
                     fill="none"
-                    className={
-                      energyPercentage >= 75
-                        ? 'text-cyan-300'
-                        : energyPercentage >= 50
-                        ? 'text-cyan-400'
-                        : energyPercentage >= 25
-                        ? 'text-cyan-500'
-                        : 'text-slate-500'
-                    }
+                    className="text-cyan-400"
                   />
-                  {/* Shackle */}
                   <path
                     d="M8 10V7C8 5.34315 9.34315 4 11 4H13C14.6569 4 16 5.34315 16 7V10"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
-                    className={
-                      energyPercentage >= 75
-                        ? 'text-cyan-300'
-                        : energyPercentage >= 50
-                        ? 'text-cyan-400'
-                        : energyPercentage >= 25
-                        ? 'text-cyan-500'
-                        : 'text-slate-500'
-                    }
+                    className="text-cyan-400"
                   />
-                  {/* Keyhole */}
                   <circle
                     cx="12"
                     cy="14"
                     r="1.5"
                     fill="currentColor"
-                    className={
-                      energyPercentage >= 75
-                        ? 'text-cyan-300'
-                        : energyPercentage >= 50
-                        ? 'text-cyan-400'
-                        : energyPercentage >= 25
-                        ? 'text-cyan-500'
-                        : 'text-slate-500'
-                    }
+                    className="text-cyan-400"
                   />
                 </svg>
-              </div>
+              </button>
             </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Locker Modal */}
+      <AnimatePresence>
+        {showLockerModal && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLockerModal(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            
+            {/* Locker Modal */}
+            <motion.div
+              initial={{ scale: 0, opacity: 0, y: -100 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ 
+                scale: 0, 
+                opacity: 0,
+                y: -50,
+                transition: { 
+                  duration: 0.3,
+                  ease: [0.32, 0, 0.67, 0]
+                }
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 25
+              }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl mx-4"
+            >
+              <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-2xl border-2 border-cyan-500/40 rounded-3xl p-8 shadow-2xl shadow-cyan-500/30">
+                <div className="text-center">
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-300 to-purple-400 bg-clip-text text-transparent mb-4">
+                    Central Locker
+                  </h2>
+                  <p className="text-slate-300 mb-6">
+                    Locker visualization will go here
+                  </p>
+                  <div className="text-6xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                    {energyPercentage}%
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

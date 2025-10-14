@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useEffect, useRef } from 'react';
-import WorldMap from 'react-svg-worldmap';
-import { CountryState } from '@/types';
-import { AnimatePresence } from 'framer-motion';
-import CountryTooltip from '@/components/CountryTooltip';
-import { COUNTRY_NAMES } from '@/lib/countryNames';
+import { useState, useMemo, useEffect, useRef } from "react";
+import WorldMap from "react-svg-worldmap";
+import { CountryState } from "@/types";
+import { AnimatePresence } from "framer-motion";
+import CountryTooltip from "@/components/CountryTooltip";
+import { COUNTRY_NAMES } from "@/lib/countryNames";
 
 interface WorldMapContainerProps {
   countryStates: Map<string, CountryState>;
@@ -24,21 +24,31 @@ export default function WorldMapContainer({
     y: number;
   } | null>(null);
   const [tapTimeout, setTapTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [animatingCountries, setAnimatingCountries] = useState<Set<string>>(new Set());
+  const [animatingCountries, setAnimatingCountries] = useState<Set<string>>(
+    new Set()
+  );
   const previousStatesRef = useRef<Map<string, number>>(new Map());
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Detect if mounted (client-side only)
+  useEffect(() => {
+    setIsMounted(true);
+    setIsTouchDevice("ontouchstart" in window);
+  }, []);
 
   // Detect reduced motion preference
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     setPrefersReducedMotion(mediaQuery.matches);
 
     const handleChange = (e: MediaQueryListEvent) => {
       setPrefersReducedMotion(e.matches);
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   // Track country state changes and trigger animations
@@ -47,19 +57,19 @@ export default function WorldMapContainer({
 
     countryStates.forEach((state, code) => {
       const previousBand = previousStatesRef.current.get(code);
-      
+
       // If glow_band changed, trigger animation
       if (previousBand !== undefined && previousBand !== state.glow_band) {
         newAnimating.add(code.toLowerCase());
       }
-      
+
       // Update previous state
       previousStatesRef.current.set(code, state.glow_band);
     });
 
     if (newAnimating.size > 0 && !prefersReducedMotion) {
       setAnimatingCountries(newAnimating);
-      
+
       // Clear animation state after animation completes
       const timeout = setTimeout(() => {
         setAnimatingCountries(new Set());
@@ -72,7 +82,7 @@ export default function WorldMapContainer({
   // Convert country states to react-svg-worldmap data format
   const mapData = useMemo(() => {
     const data: Array<{ country: string; value: number }> = [];
-    
+
     countryStates.forEach((state, code) => {
       // Map to lowercase for react-svg-worldmap compatibility
       data.push({
@@ -80,7 +90,7 @@ export default function WorldMapContainer({
         value: state.glow_band,
       });
     });
-    
+
     return data;
   }, [countryStates]);
 
@@ -88,22 +98,22 @@ export default function WorldMapContainer({
   const getColorForBand = (band: number): string => {
     switch (band) {
       case 0:
-        return '#334155'; // slate-700 (off)
+        return "#334155"; // slate-700 (off)
       case 1:
-        return 'rgba(251, 191, 36, 0.4)'; // amber-600/40 (warm)
+        return "rgba(251, 191, 36, 0.4)"; // amber-600/40 (warm)
       case 2:
-        return 'rgba(245, 158, 11, 0.7)'; // amber-500/70 (bright)
+        return "rgba(245, 158, 11, 0.7)"; // amber-500/70 (bright)
       case 3:
-        return '#fbbf24'; // amber-400 (radiant)
+        return "#fbbf24"; // amber-400 (radiant)
       default:
-        return '#334155';
+        return "#334155";
     }
   };
 
   const handleCountryClick = (event: any, countryCode: string) => {
     const code = countryCode.toUpperCase();
     const state = countryStates.get(code);
-    
+
     if (!state) return;
 
     const rect = event.currentTarget.getBoundingClientRect();
@@ -136,11 +146,11 @@ export default function WorldMapContainer({
 
   const handleCountryHover = (event: any, countryCode: string) => {
     // Only handle hover on desktop (not touch devices)
-    if ('ontouchstart' in window) return;
+    if (!isMounted || isTouchDevice) return;
 
     const code = countryCode.toUpperCase();
     const state = countryStates.get(code);
-    
+
     if (!state) return;
 
     setHoveredCountry({
@@ -156,7 +166,7 @@ export default function WorldMapContainer({
 
   const handleCountryLeave = () => {
     // Only handle on desktop
-    if ('ontouchstart' in window) return;
+    if (!isMounted || isTouchDevice) return;
 
     setHoveredCountry(null);
     onCountryHover?.(null);
@@ -171,15 +181,33 @@ export default function WorldMapContainer({
     };
   }, [tapTimeout]);
 
+  // Don't render map on server to avoid hydration mismatch
+  if (!isMounted) {
+    return (
+      <div className="relative w-full max-w-5xl mx-auto">
+        <div className="relative w-full h-[480px] flex items-center justify-center bg-slate-900/20 rounded-lg">
+          <div className="text-slate-500 text-sm">Loading map...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative w-full max-w-5xl mx-auto">
-      <div 
-        className="relative"
+    <div className="relative w-full max-w-6xl mx-auto">
+      <div
+        className="relative w-full bg-transparent rounded-xl overflow-hidden"
+        style={{
+          // Remove white background from the map container
+          background: "transparent",
+        }}
         onMouseMove={(e) => {
           // Track mouse position for hover tooltips
           const target = e.target as HTMLElement;
-          if (target.tagName === 'path' && target.getAttribute('data-country')) {
-            const countryCode = target.getAttribute('data-country') || '';
+          if (
+            target.tagName === "path" &&
+            target.getAttribute("data-country")
+          ) {
+            const countryCode = target.getAttribute("data-country") || "";
             handleCountryHover(e, countryCode);
           }
         }}
@@ -187,40 +215,46 @@ export default function WorldMapContainer({
         onClick={(e) => {
           // Handle tap/click for mobile
           const target = e.target as HTMLElement;
-          if (target.tagName === 'path' && target.getAttribute('data-country')) {
-            const countryCode = target.getAttribute('data-country') || '';
+          if (
+            target.tagName === "path" &&
+            target.getAttribute("data-country")
+          ) {
+            const countryCode = target.getAttribute("data-country") || "";
             handleCountryClick(e, countryCode);
           }
         }}
       >
-        <WorldMap
-          color="#334155"
-          value-suffix="band"
-          size="responsive"
-          data={mapData}
-          styleFunction={(context: any) => {
-            const band = context.countryValue || 0;
-            const color = getColorForBand(band);
-            const isAnimating = animatingCountries.has(context.countryCode);
-            
-            // Base styles
-            const baseStyles: any = {
-              fill: color,
-              stroke: '#1e293b',
-              strokeWidth: 0.5,
-              cursor: 'pointer',
-              transition: 'fill 0.3s ease',
-            };
+        <div className="worldmap-wrapper">
+          <WorldMap
+            color="#334155"
+            value-suffix="band"
+            size="responsive"
+            data={mapData}
+            styleFunction={(context: any) => {
+              const band = context.countryValue || 0;
+              const color = getColorForBand(band);
+              const isAnimating = animatingCountries.has(context.countryCode);
 
-            // Add breathe animation if country state changed
-            if (isAnimating && !prefersReducedMotion) {
-              baseStyles.animation = 'breathe-pulse 1s ease-out';
-              baseStyles.filter = 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))';
-            }
-            
-            return baseStyles;
-          }}
-        />
+              // Base styles
+              const baseStyles: any = {
+                fill: color,
+                stroke: "#1e293b",
+                strokeWidth: 0.5,
+                cursor: "pointer",
+                transition: "fill 0.3s ease",
+              };
+
+              // Add breathe animation if country state changed
+              if (isAnimating && !prefersReducedMotion) {
+                baseStyles.animation = "breathe-pulse 1s ease-out";
+                baseStyles.filter =
+                  "drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))";
+              }
+
+              return baseStyles;
+            }}
+          />
+        </div>
       </div>
 
       {/* Tooltip */}
