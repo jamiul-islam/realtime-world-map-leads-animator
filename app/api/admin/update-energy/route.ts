@@ -79,6 +79,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (fetchError) {
+      console.error('Error fetching locker state:', {
+        admin: user.email,
+        error: fetchError.message,
+        timestamp: new Date().toISOString(),
+      });
       return NextResponse.json(
         { success: false, error: 'Failed to fetch current state' },
         { status: 500 }
@@ -87,6 +92,12 @@ export async function POST(request: NextRequest) {
 
     // Check if already unlocked and trying to increment
     if (currentState.is_unlocked && mode === 'increment') {
+      console.warn('Attempted increment after unlock:', {
+        admin: user.email,
+        currentPercentage: currentState.energy_percentage,
+        attemptedIncrement: value,
+        timestamp: new Date().toISOString(),
+      });
       return NextResponse.json(
         { success: false, error: 'Unlock complete - no further increments allowed' },
         { status: 400 }
@@ -118,7 +129,15 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (updateError) {
-      console.error('Error updating energy:', updateError);
+      console.error('Error updating energy:', {
+        admin: user.email,
+        mode,
+        value,
+        currentPercentage: currentState.energy_percentage,
+        newPercentage: newEnergyPercentage,
+        error: updateError.message,
+        timestamp: new Date().toISOString(),
+      });
       return NextResponse.json(
         { success: false, error: 'Failed to update energy' },
         { status: 500 }
@@ -138,7 +157,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (auditError) {
-      console.error('Error creating audit log:', auditError);
+      console.error('Error creating audit log:', {
+        admin: user.email,
+        action: actionType,
+        subject: 'global_energy',
+        error: auditError.message,
+        timestamp: new Date().toISOString(),
+      });
       // Don't fail the request if audit log fails
     }
 
@@ -147,7 +172,10 @@ export async function POST(request: NextRequest) {
       data: updatedState,
     });
   } catch (error) {
-    console.error('Error in update-energy route:', error);
+    console.error('Error in update-energy route:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    });
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
