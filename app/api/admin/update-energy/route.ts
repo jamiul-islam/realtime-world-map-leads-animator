@@ -5,9 +5,9 @@ import { EnergyUpdate } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
-    // Create Supabase client with cookies
+    // Create Supabase client with cookies for authentication
     const cookieStore = await cookies();
-    const supabase = createServerClient(
+    const supabaseAuth = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await supabaseAuth.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
@@ -45,6 +45,14 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
+
+    // Create service role client for admin operations (bypasses RLS)
+    // Use direct createClient instead of createServerClient for service role
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE!
+    );
 
     // Parse request body
     const body: EnergyUpdate = await request.json();
@@ -72,11 +80,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get current locker state
-    const { data: currentState, error: fetchError } = await supabase
+    // Get current locker state using admin client
+    const { data: currentStateData, error: fetchError } = await supabaseAdmin
       .from('locker_state')
       .select('*')
-      .single();
+      .eq('id', 1);
 
     if (fetchError) {
       console.error('Error fetching locker state:', {
@@ -89,6 +97,19 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    if (!currentStateData || currentStateData.length === 0) {
+      console.error('Locker state not found:', {
+        admin: user.email,
+        timestamp: new Date().toISOString(),
+      });
+      return NextResponse.json(
+        { success: false, error: 'Locker state not found' },
+        { status: 404 }
+      );
+    }
+
+    const currentState = currentStateData[0];
 
     // Check if already unlocked and trying to increment
     if (currentState.is_unlocked && mode === 'increment') {
@@ -116,8 +137,8 @@ export async function POST(request: NextRequest) {
     // Determine if unlock should happen
     const shouldUnlock = newEnergyPercentage >= 100 && !currentState.is_unlocked;
 
-    // Update locker state
-    const { data: updatedState, error: updateError } = await supabase
+    // Update locker state using admin client
+    const { data: updatedStateData, error: updateError } = await supabaseAdmin
       .from('locker_state')
       .update({
         energy_percentage: newEnergyPercentage,
@@ -125,8 +146,7 @@ export async function POST(request: NextRequest) {
         last_updated: new Date().toISOString(),
       })
       .eq('id', 1)
-      .select()
-      .single();
+      .select();
 
     if (updateError) {
       console.error('Error updating energy:', {
@@ -144,11 +164,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert audit log entry
+    if (!updatedStateData || updatedStateData.length === 0) {
+      console.error('No data returned after update:', {
+        admin: user.email,
+        timestamp: new Date().toISOString(),
+      });
+      return NextResponse.json(
+        { success: false, error: 'Update failed - no data returned' },
+        { status: 500 }
+      );
+    }
+
+    const updatedState = updatedStateData[0];
+
+    // Insert audit log entry using admin client
     const actionType = mode === 'increment' ? 'energy_increment' : 'energy_set';
     const deltaOrValue = mode === 'increment' ? `+${value}%` : `set to ${value}%`;
 
-    const { error: auditError } = await supabase.from('audit_log').insert({
+    const { error: auditError } = await supabaseAdmin.from('audit_log').insert({
       admin_email: user.email!,
       action_type: actionType,
       subject: 'global_energy',
