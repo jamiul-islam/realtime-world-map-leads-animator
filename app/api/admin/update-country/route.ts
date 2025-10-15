@@ -88,6 +88,12 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (fetchError) {
+      console.error('Error fetching country state:', {
+        admin: user.email,
+        countryCode,
+        error: fetchError.message,
+        timestamp: new Date().toISOString(),
+      });
       return NextResponse.json(
         { success: false, error: 'Country not found' },
         { status: 404 }
@@ -116,7 +122,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (updateError) {
-      console.error('Error updating country:', updateError);
+      console.error('Error updating country:', {
+        admin: user.email,
+        countryCode,
+        mode,
+        value,
+        error: updateError.message,
+        timestamp: new Date().toISOString(),
+      });
       return NextResponse.json(
         { success: false, error: 'Failed to update country' },
         { status: 500 }
@@ -136,7 +149,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (auditError) {
-      console.error('Error creating audit log:', auditError);
+      console.error('Error creating audit log:', {
+        admin: user.email,
+        action: actionType,
+        subject: countryCode,
+        error: auditError.message,
+        timestamp: new Date().toISOString(),
+      });
       // Don't fail the request if audit log fails
     }
 
@@ -145,7 +164,10 @@ export async function POST(request: NextRequest) {
       data: updatedState,
     });
   } catch (error) {
-    console.error('Error in update-country route:', error);
+    console.error('Error in update-country route:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    });
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
