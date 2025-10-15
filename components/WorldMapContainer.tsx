@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, memo } from "react";
 import WorldMap from "react-svg-worldmap";
 import { CountryState } from "@/types";
 import { AnimatePresence } from "framer-motion";
@@ -12,7 +12,7 @@ interface WorldMapContainerProps {
   onCountryHover?: (countryCode: string | null) => void;
 }
 
-export default function WorldMapContainer({
+function WorldMapContainer({
   countryStates,
   onCountryHover,
 }: WorldMapContainerProps) {
@@ -271,3 +271,24 @@ export default function WorldMapContainer({
     </div>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export default memo(WorldMapContainer, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if countryStates Map has changed
+  if (prevProps.countryStates.size !== nextProps.countryStates.size) {
+    return false;
+  }
+  
+  // Check if any country state values have changed
+  for (const [code, state] of nextProps.countryStates) {
+    const prevState = prevProps.countryStates.get(code);
+    if (!prevState || 
+        prevState.activation_count !== state.activation_count ||
+        prevState.glow_band !== state.glow_band) {
+      return false;
+    }
+  }
+  
+  // onCountryHover function reference comparison
+  return prevProps.onCountryHover === nextProps.onCountryHover;
+});

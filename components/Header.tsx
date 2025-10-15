@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useGlobalStore } from '@/store/globalStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function Header() {
+function Header() {
   const lockerState = useGlobalStore((state) => state.lockerState);
   const [showLockerModal, setShowLockerModal] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
@@ -217,3 +217,7 @@ export default function Header() {
     </>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-render when locker state changes
+export default memo(Header);
