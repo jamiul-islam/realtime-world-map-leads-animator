@@ -68,33 +68,37 @@ export default function ModifyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Admin Header */}
-      <header className="border-b border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Admin Control Panel</h1>
-              <p className="text-sm text-slate-400 mt-1">
-                Logged in as: <span className="text-cyan-400">{userEmail}</span>
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-purple-950">
+      {/* Admin Header - Matching homepage style */}
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-6xl px-4">
+        <div className="bg-slate-900/80 backdrop-blur-xl border border-cyan-500/30 rounded-full px-6 py-3 shadow-2xl shadow-cyan-500/20">
+          <div className="flex items-center justify-between gap-6">
+            {/* Title */}
+            <div className="flex items-center gap-4">
+              <h1 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-cyan-300 via-purple-300 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap">
+                Admin Control Panel
+              </h1>
+              <span className="hidden sm:block text-xs text-slate-400">
+                {userEmail}
+              </span>
             </div>
-            
+
             {/* Current State Display */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-xs text-slate-400 uppercase tracking-wide">Global Energy</p>
-                <p className="text-2xl font-bold text-cyan-400">
+                <div className="text-xs text-slate-400 font-medium">Global Energy</div>
+                <div className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
                   {lockerState?.energy_percentage ?? 0}%
-                </p>
-                {lockerState?.is_unlocked && (
-                  <p className="text-xs text-amber-400 mt-1">🔓 Unlocked</p>
-                )}
+                </div>
               </div>
-              
+
+              {lockerState?.is_unlocked && (
+                <div className="text-amber-400 text-xl">🔓</div>
+              )}
+
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+                className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 border border-cyan-400/30 hover:border-cyan-400/50 text-cyan-300 rounded-full transition-all duration-300 text-sm font-medium"
               >
                 Logout
               </button>
@@ -104,17 +108,21 @@ export default function ModifyPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Country Update Form */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
-            <h2 className="text-xl font-semibold text-white mb-6">Update Country</h2>
+          <div className="bg-slate-900/80 backdrop-blur-xl border border-cyan-500/30 rounded-3xl p-8 shadow-2xl shadow-cyan-500/20">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-300 via-purple-300 to-cyan-400 bg-clip-text text-transparent mb-6">
+              Update Country
+            </h2>
             <CountryUpdateForm onSubmit={handleCountryUpdate} />
           </div>
 
           {/* Global Energy Form - Will be implemented in task 12 */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Update Global Energy</h2>
+          <div className="bg-slate-900/80 backdrop-blur-xl border border-cyan-500/30 rounded-3xl p-8 shadow-2xl shadow-cyan-500/20">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-300 via-purple-300 to-cyan-400 bg-clip-text text-transparent mb-6">
+              Update Global Energy
+            </h2>
             <p className="text-slate-400">Global energy form coming soon...</p>
           </div>
         </div>

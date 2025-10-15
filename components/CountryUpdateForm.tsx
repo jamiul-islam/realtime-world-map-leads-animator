@@ -119,7 +119,7 @@ export default function CountryUpdateForm({ onSubmit }: CountryUpdateFormProps) 
           <button
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-left text-white hover:bg-slate-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="w-full px-4 py-3 bg-slate-800/50 border border-cyan-500/30 rounded-xl text-left text-slate-100 hover:bg-slate-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
           >
             {selectedCountry
               ? `${COUNTRY_NAMES[selectedCountry]} (${selectedCountry})`
@@ -127,14 +127,14 @@ export default function CountryUpdateForm({ onSubmit }: CountryUpdateFormProps) 
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute z-10 w-full mt-2 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-64 overflow-hidden">
-              <div className="p-2 border-b border-slate-700">
+            <div className="absolute z-10 w-full mt-2 bg-slate-900/95 backdrop-blur-xl border border-cyan-500/30 rounded-xl shadow-2xl shadow-cyan-500/20 max-h-64 overflow-hidden">
+              <div className="p-2 border-b border-cyan-500/20">
                 <input
                   type="text"
                   placeholder="Search countries..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-cyan-500/30 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   autoFocus
                 />
               </div>
@@ -144,7 +144,7 @@ export default function CountryUpdateForm({ onSubmit }: CountryUpdateFormProps) 
                     key={country.code}
                     type="button"
                     onClick={() => handleCountrySelect(country.code)}
-                    className="w-full px-4 py-2 text-left text-white hover:bg-slate-700 transition-colors duration-150"
+                    className="w-full px-4 py-2 text-left text-slate-100 hover:bg-cyan-500/10 transition-colors duration-150"
                   >
                     {country.name} ({country.code})
                   </button>
@@ -161,14 +161,14 @@ export default function CountryUpdateForm({ onSubmit }: CountryUpdateFormProps) 
 
         {/* Current Country State */}
         {currentCountryState && (
-          <div className="mt-2 p-3 bg-slate-700/30 rounded-lg border border-slate-600/50">
-            <p className="text-xs text-slate-400 mb-1">Current State:</p>
+          <div className="mt-3 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+            <p className="text-xs text-cyan-300 font-medium mb-2">Current State:</p>
             <div className="flex items-center gap-4 text-sm">
-              <span className="text-white">
+              <span className="text-slate-300">
                 Activation Count: <span className="text-cyan-400 font-semibold">{currentCountryState.activation_count}</span>
               </span>
-              <span className="text-white">
-                Glow Band: <span className="text-amber-400 font-semibold">{currentCountryState.glow_band}</span>
+              <span className="text-slate-300">
+                Glow Band: <span className="text-purple-400 font-semibold">{currentCountryState.glow_band}</span>
               </span>
             </div>
           </div>
@@ -180,17 +180,17 @@ export default function CountryUpdateForm({ onSubmit }: CountryUpdateFormProps) 
         <label className="block text-sm font-medium text-slate-300 mb-2">
           Update Mode
         </label>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <button
             type="button"
             onClick={() => {
               setMode('increment');
               setValidationError('');
             }}
-            className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
               mode === 'increment'
-                ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
-                : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+                ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-cyan-500/30'
+                : 'bg-slate-800/50 border border-cyan-500/30 text-slate-300 hover:bg-slate-800'
             }`}
           >
             Increment
@@ -201,10 +201,10 @@ export default function CountryUpdateForm({ onSubmit }: CountryUpdateFormProps) 
               setMode('absolute');
               setValidationError('');
             }}
-            className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
               mode === 'absolute'
-                ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
-                : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+                ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-cyan-500/30'
+                : 'bg-slate-800/50 border border-cyan-500/30 text-slate-300 hover:bg-slate-800'
             }`}
           >
             Absolute Set
@@ -225,7 +225,7 @@ export default function CountryUpdateForm({ onSubmit }: CountryUpdateFormProps) 
             setValidationError('');
           }}
           placeholder={mode === 'increment' ? 'Enter positive number' : 'Enter non-negative number'}
-          className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          className="w-full px-4 py-3 bg-slate-800/50 border border-cyan-500/30 rounded-xl text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
           min={mode === 'increment' ? '1' : '0'}
         />
       </div>
@@ -241,7 +241,7 @@ export default function CountryUpdateForm({ onSubmit }: CountryUpdateFormProps) 
           placeholder="Add a note about this update..."
           maxLength={500}
           rows={3}
-          className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+          className="w-full px-4 py-3 bg-slate-800/50 border border-cyan-500/30 rounded-xl text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all resize-none"
         />
         <p className="text-xs text-slate-400 mt-1">
           {note.length}/500 characters
@@ -250,8 +250,8 @@ export default function CountryUpdateForm({ onSubmit }: CountryUpdateFormProps) 
 
       {/* Validation Error */}
       {validationError && (
-        <div className="p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-          <p className="text-sm text-red-400">{validationError}</p>
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+          <p className="text-sm text-red-300">{validationError}</p>
         </div>
       )}
 
@@ -259,9 +259,35 @@ export default function CountryUpdateForm({ onSubmit }: CountryUpdateFormProps) 
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-slate-600 disabled:to-slate-600 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-cyan-500/30 disabled:cursor-not-allowed"
+        className="w-full py-3 px-6 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 disabled:from-slate-600 disabled:to-slate-700 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isSubmitting ? 'Updating...' : 'Update Country'}
+        {isSubmitting ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg
+              className="animate-spin h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            Updating...
+          </span>
+        ) : (
+          'Update Country'
+        )}
       </button>
     </form>
   );
