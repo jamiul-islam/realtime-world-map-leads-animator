@@ -29,7 +29,6 @@ interface GlobalStore {
   // Realtime connection state
   realtimeChannels: RealtimeChannel[];
   isRealtimeConnected: boolean;
-  pollingInterval: NodeJS.Timeout | null;
   
   // Actions
   setLockerState: (state: LockerState) => void;
@@ -45,8 +44,6 @@ interface GlobalStore {
   fetchInitialData: () => Promise<void>;
   subscribeToRealtime: () => void;
   unsubscribeFromRealtime: () => void;
-  startPolling: () => void;
-  stopPolling: () => void;
 }
 
 export const useGlobalStore = create<GlobalStore>((set, get) => ({
@@ -61,7 +58,6 @@ export const useGlobalStore = create<GlobalStore>((set, get) => ({
   },
   realtimeChannels: [],
   isRealtimeConnected: false,
-  pollingInterval: null,
   
   // Actions
   setLockerState: (state) => set({ lockerState: state }),
@@ -145,7 +141,7 @@ export const useGlobalStore = create<GlobalStore>((set, get) => ({
   
   // Subscribe to Realtime changes
   subscribeToRealtime: () => {
-    const { setLockerState, updateCountryState, startPolling } = get();
+    const { setLockerState, updateCountryState } = get();
     
     // Subscribe to locker_state changes
     const lockerChannel = supabase
@@ -168,8 +164,6 @@ export const useGlobalStore = create<GlobalStore>((set, get) => ({
           set({ isRealtimeConnected: true });
         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           set({ isRealtimeConnected: false });
-          // Start polling fallback if Realtime fails
-          startPolling();
         }
       });
     
@@ -193,59 +187,19 @@ export const useGlobalStore = create<GlobalStore>((set, get) => ({
       .subscribe();
     
     set({ realtimeChannels: [lockerChannel, countryChannel] });
-    
-    // Set up connection health check (10s heartbeat timeout)
-    const healthCheckInterval = setInterval(() => {
-      const state = get();
-      if (!state.isRealtimeConnected) {
-        startPolling();
-      }
-    }, 10000);
-    
-    // Store interval for cleanup
-    set({ pollingInterval: healthCheckInterval as any });
   },
   
   // Unsubscribe from Realtime
   unsubscribeFromRealtime: () => {
-    const { realtimeChannels, pollingInterval } = get();
+    const { realtimeChannels } = get();
     
     realtimeChannels.forEach((channel) => {
       supabase.removeChannel(channel);
     });
     
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-    }
-    
     set({ 
       realtimeChannels: [], 
-      isRealtimeConnected: false,
-      pollingInterval: null 
+      isRealtimeConnected: false
     });
-  },
-  
-  // Start polling fallback (60s interval)
-  startPolling: () => {
-    const { pollingInterval, fetchInitialData } = get();
-    
-    // Don't start if already polling
-    if (pollingInterval) return;
-    
-    const interval = setInterval(() => {
-      fetchInitialData();
-    }, 60000); // 60 seconds
-    
-    set({ pollingInterval: interval as any });
-  },
-  
-  // Stop polling
-  stopPolling: () => {
-    const { pollingInterval } = get();
-    
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-      set({ pollingInterval: null });
-    }
   },
 }));
