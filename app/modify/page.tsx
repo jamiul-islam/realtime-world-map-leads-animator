@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useGlobalStore } from '@/store/globalStore';
 import CountryUpdateForm from '@/components/CountryUpdateForm';
+import GlobalEnergyForm from '@/components/GlobalEnergyForm';
 import Toast from '@/components/Toast';
-import { CountryUpdate } from '@/types';
+import { CountryUpdate, EnergyUpdate } from '@/types';
 
 export default function ModifyPage() {
   const router = useRouter();
@@ -67,6 +68,41 @@ export default function ModifyPage() {
     }
   };
 
+  const handleEnergyUpdate = async (update: EnergyUpdate) => {
+    try {
+      const response = await fetch('/api/admin/update-energy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(update),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        showToast({
+          type: 'error',
+          message: result.error || 'Failed to update energy',
+        });
+        throw new Error(result.error);
+      }
+
+      // Show success toast with updated values
+      const { energy_percentage, is_unlocked } = result.data;
+      showToast({
+        type: 'success',
+        message: `Energy updated to ${energy_percentage}%${is_unlocked ? ' - Unlocked! 🔓' : ''}`,
+      });
+
+      // Refresh data to show updated state
+      await fetchInitialData();
+    } catch (error) {
+      console.error('Error updating energy:', error);
+      // Error toast already shown above
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-purple-950">
       {/* Admin Header - Matching homepage style */}
@@ -118,12 +154,12 @@ export default function ModifyPage() {
             <CountryUpdateForm onSubmit={handleCountryUpdate} />
           </div>
 
-          {/* Global Energy Form - Will be implemented in task 12 */}
+          {/* Global Energy Form */}
           <div className="bg-slate-900/80 backdrop-blur-xl border border-cyan-500/30 rounded-3xl p-8 shadow-2xl shadow-cyan-500/20">
             <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-300 via-purple-300 to-cyan-400 bg-clip-text text-transparent mb-6">
               Update Global Energy
             </h2>
-            <p className="text-slate-400">Global energy form coming soon...</p>
+            <GlobalEnergyForm onSubmit={handleEnergyUpdate} />
           </div>
         </div>
       </main>
