@@ -69,10 +69,31 @@ export const useGlobalStore = create<GlobalStore>((set, get) => ({
       return { countryStates: newMap };
     }),
   
-  setCountryStates: (states) =>
-    set({
-      countryStates: new Map(states.map((state) => [state.country_code, state])),
-    }),
+  setCountryStates: (states) => {
+    // Memoize: only update if states have actually changed
+    const currentStates = get().countryStates;
+    const newMap = new Map(states.map((state) => [state.country_code, state]));
+    
+    // Check if any values have changed
+    let hasChanged = currentStates.size !== newMap.size;
+    if (!hasChanged) {
+      for (const [code, state] of newMap) {
+        const currentState = currentStates.get(code);
+        if (!currentState || 
+            currentState.activation_count !== state.activation_count ||
+            currentState.glow_band !== state.glow_band ||
+            currentState.last_updated !== state.last_updated) {
+          hasChanged = true;
+          break;
+        }
+      }
+    }
+    
+    // Only update if changed
+    if (hasChanged) {
+      set({ countryStates: newMap });
+    }
+  },
   
   setLoading: (loading) =>
     set((prev) => ({

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 
 interface CountryTooltipProps {
   countryCode: string | null;
@@ -10,7 +10,7 @@ interface CountryTooltipProps {
   position: { x: number; y: number };
 }
 
-export default function CountryTooltip({
+function CountryTooltip({
   countryCode,
   countryName,
   activationCount,
@@ -91,3 +91,6 @@ export default function CountryTooltip({
     </motion.div>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export default memo(CountryTooltip);
