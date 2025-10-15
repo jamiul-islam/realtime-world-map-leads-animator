@@ -9,6 +9,27 @@ import GlobalEnergyForm from '@/components/GlobalEnergyForm';
 import Toast from '@/components/Toast';
 import { CountryUpdate, EnergyUpdate } from '@/types';
 
+// Fetch with timeout utility
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 15000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out after 15 seconds. Please try again.');
+    }
+    throw error;
+  }
+}
+
 export default function ModifyPage() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string>('');
@@ -35,13 +56,13 @@ export default function ModifyPage() {
 
   const handleCountryUpdate = async (update: CountryUpdate) => {
     try {
-      const response = await fetch('/api/admin/update-country', {
+      const response = await fetchWithTimeout('/api/admin/update-country', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(update),
-      });
+      }, 15000);
 
       const result = await response.json();
 
@@ -54,29 +75,35 @@ export default function ModifyPage() {
       }
 
       // Show success toast with updated values
-      const { activation_count, glow_band } = result.data;
+      const { activation_count, glow_band, country_code } = result.data;
       showToast({
         type: 'success',
         message: `Country updated! Activation count: ${activation_count}, Glow band: ${glow_band}`,
       });
 
-      // Refresh data to show updated state
-      await fetchInitialData();
+      // Update Zustand store with new country state (more efficient than refetching all data)
+      useGlobalStore.getState().updateCountryState(country_code, result.data);
     } catch (error) {
       console.error('Error updating country:', error);
-      // Error toast already shown above
+      // Show error toast if not already shown
+      if (error instanceof Error && error.message.includes('timed out')) {
+        showToast({
+          type: 'error',
+          message: error.message,
+        });
+      }
     }
   };
 
   const handleEnergyUpdate = async (update: EnergyUpdate) => {
     try {
-      const response = await fetch('/api/admin/update-energy', {
+      const response = await fetchWithTimeout('/api/admin/update-energy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(update),
-      });
+      }, 15000);
 
       const result = await response.json();
 
@@ -95,11 +122,17 @@ export default function ModifyPage() {
         message: `Energy updated to ${energy_percentage}%${is_unlocked ? ' - Unlocked! 🔓' : ''}`,
       });
 
-      // Refresh data to show updated state
-      await fetchInitialData();
+      // Update Zustand store with new locker state (more efficient than refetching all data)
+      useGlobalStore.getState().setLockerState(result.data);
     } catch (error) {
       console.error('Error updating energy:', error);
-      // Error toast already shown above
+      // Show error toast if not already shown
+      if (error instanceof Error && error.message.includes('timed out')) {
+        showToast({
+          type: 'error',
+          message: error.message,
+        });
+      }
     }
   };
 
