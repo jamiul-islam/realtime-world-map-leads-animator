@@ -8,6 +8,7 @@ import CountryUpdateForm from '@/components/CountryUpdateForm';
 import GlobalEnergyForm from '@/components/GlobalEnergyForm';
 import Toast from '@/components/Toast';
 import { CountryUpdate, EnergyUpdate } from '@/types';
+import Link from 'next/link';
 
 // Fetch with timeout utility
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 15000) {
@@ -144,9 +145,11 @@ export default function ModifyPageContent() {
           <div className="flex items-center justify-between gap-6">
             {/* Title */}
             <div className="flex items-center gap-4">
-              <h1 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-cyan-300 via-purple-300 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap">
-                Admin Control Panel
-              </h1>
+               <Link href="/">
+                <h1 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-cyan-300 via-purple-300 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap cursor-pointer">
+                  Global Unlock
+                </h1>
+               </Link>
               <span className="hidden sm:block text-xs text-slate-400">
                 {userEmail}
               </span>
