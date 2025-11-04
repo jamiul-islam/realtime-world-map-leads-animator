@@ -3,8 +3,11 @@
 import { useState, useEffect, useRef, memo } from 'react';
 import { useGlobalStore } from '@/store/globalStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 function Header() {
+  const pathname = usePathname();
   const lockerState = useGlobalStore((state) => state.lockerState);
   const [showLockerModal, setShowLockerModal] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
@@ -12,6 +15,11 @@ function Header() {
   
   const energyPercentage = lockerState?.energy_percentage ?? 0;
   const isUnlocked = lockerState?.is_unlocked ?? false;
+  
+  // Hide Join Now button on login, modify, and join-now pages
+  const showJoinNowButton = !pathname?.includes('/login') && 
+                            !pathname?.includes('/modify') && 
+                            !pathname?.includes('/join-now');
   
   // Detect unlock trigger (when percentage reaches 100%)
   useEffect(() => {
@@ -34,11 +42,20 @@ function Header() {
       <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-4xl px-4">
         {/* Capsule Navigation Bar */}
         <div className="bg-slate-900/80 backdrop-blur-xl border border-cyan-500/30 rounded-full px-6 py-3 shadow-2xl shadow-cyan-500/20">
-          <div className="flex items-center justify-between gap-6">
+          <div className="flex items-center justify-between gap-4 sm:gap-6">
             {/* Title */}
             <h1 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-cyan-300 via-purple-300 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap">
               Global Unlock
             </h1>
+            
+            {/* Join Now Button - Only on homepage */}
+            {showJoinNowButton && (
+              <Link href="/join-now">
+                <button className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-sm rounded-full shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all duration-300 whitespace-nowrap">
+                  Join Now
+                </button>
+              </Link>
+            )}
             
             {/* Progress Display */}
             <div className="flex items-center gap-3">
