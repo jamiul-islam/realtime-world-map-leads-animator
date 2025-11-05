@@ -9,15 +9,46 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const [isVerifying, setIsVerifying] = useState(true);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate verification delay
+    const syncPaymentStatus = async () => {
+      if (!sessionId) {
+        setIsVerifying(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/sync-payment-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sessionId }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to sync payment status');
+        }
+
+        console.log('Payment status synced:', data.status);
+      } catch (error: any) {
+        console.error('Error syncing payment:', error);
+        setSyncError(error.message);
+      } finally {
+        setIsVerifying(false);
+      }
+    };
+
+    // Sync payment status after a short delay
     const timer = setTimeout(() => {
-      setIsVerifying(false);
-    }, 1500);
+      syncPaymentStatus();
+    }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [sessionId]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-purple-950">
